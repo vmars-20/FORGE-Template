@@ -1,0 +1,186 @@
+###############################################################################
+# Basic Probe Driver (BPD) register specification for forge-codegen
+#
+# Ordering and comments intentionally mirror the control loop a human operator
+# would follow: configure arming policy, tune outputs, then wire up monitoring.
+# All voltages expressed in millivolts (±5 V envelope) to play nicely with Go/Lab/Pro
+# DAC/ADC expectations. Time fields use the narrowest width that preserves range.
+###############################################################################
+
+app_name: basic_probe_driver
+# Default to Go for development; swap to Lab/Pro when generating instrument-specific builds.
+platform: moku_go
+description: >
+  Generic Basic Probe Driver control surface for multi-probe FI operations.
+
+control_registers:
+  # CR0[31:29] reserved for FORGE control scheme (forge_ready, user_enable, clk_enable)
+  # CR1-CR11 available for application (11 registers)
+  # CR12-CR15 unused (future expansion)
+
+datatypes:
+  ###########################################################################
+  # 1. Arming and lifecycle management
+  ###########################################################################
+  # Arm the FSM (IDLE → ARMED transition).
+  - name: arm_enable
+    datatype: boolean
+    description: Enable arming of the FSM (IDLE → ARMED transition).
+    default_value: false
+    control_register: CR1
+    bit_range: "[0]"
+
+  # External trigger input (software-driven trigger for testing).
+  - name: ext_trigger_in
+    datatype: boolean
+    description: Software-driven external trigger input for testing.
+    default_value: false
+    control_register: CR1
+    bit_range: "[1]"
+
+  # Burst-mode toggle; false keeps one-shot semantics for safety-critical bring-up.
+  - name: auto_rearm_enable
+    datatype: boolean
+    description: When true, FSM re-enters ARMED after cooldown instead of idling.
+    default_value: false
+    control_register: CR1
+    bit_range: "[2]"
+
+  # Sticky faults require acknowledgement so the host can log and respond deliberately.
+  - name: fault_clear
+    datatype: boolean
+    description: Write 1 to clear fault state and re-arm eligibility.
+    default_value: false
+    control_register: CR1
+    bit_range: "[3]"
+
+  # Watchdog so drivers don't hang forever waiting on an external trigger.
+  - name: trigger_wait_timeout
+    datatype: pulse_duration_s_u16
+    description: Maximum time to wait in ARMED before timing out.
+    default_value: 2
+    min_value: 0
+    max_value: 3600
+    units: s
+    control_register: CR6
+    bit_range: "[15:0]"
+
+  ###########################################################################
+  # 2. Output drive controls (trigger path first, then power/intensity leg)
+  ###########################################################################
+  # DAC driving the probe's digital trigger input (±5 V range, software clamps as needed).
+  - name: trig_out_voltage
+    datatype: voltage_output_05v_s16
+    description: Output voltage level for the digital trigger line (mV).
+    default_value: 0
+    min_value: -5000
+    max_value: 5000
+    units: mV
+    control_register: CR2
+    bit_range: "[15:0]"
+
+  # Pulse width for trigger_out; short pulses avoid re-trigger hazards on TTL inputs.
+  - name: trig_out_duration
+    datatype: pulse_duration_ns_u16
+    description: Duration of the trigger_out pulse.
+    default_value: 100
+    min_value: 20
+    max_value: 50000
+    units: ns
+    control_register: CR3
+    bit_range: "[15:0]"
+
+  # Analog set-point for power/intensity rails; signed to allow bipolar supplies.
+  - name: intensity_voltage
+    datatype: voltage_output_05v_s16
+    description: Analog intensity/power control voltage delivered to the probe (mV).
+    default_value: 0
+    min_value: -5000
+    max_value: 5000
+    units: mV
+    control_register: CR4
+    bit_range: "[15:0]"
+
+  # Window for the intensity leg; decouple from trigger so exotic probes can diverge.
+  - name: intensity_duration
+    datatype: pulse_duration_ns_u16
+    description: Duration of the intensity drive window.
+    default_value: 200
+    min_value: 20
+    max_value: 50000
+    units: ns
+    control_register: CR5
+    bit_range: "[15:0]"
+
+  # Minimum cooldown between firings; 24-bit µs gives >16 s span for thermal safety.
+  - name: cooldown_interval
+    datatype: pulse_duration_us_u24
+    description: Cooldown dwell enforced between pulses.
+    default_value: 10
+    min_value: 1
+    max_value: 500000
+    units: us
+    control_register: CR7
+    bit_range: "[23:0]"
+
+  ###########################################################################
+  # 3. Probe monitoring and feedback thresholds
+  ###########################################################################
+  # Signed monitor feedback (mV). Negative excursion → higher current draw on Riscure probes.
+  - name: probe_monitor_feedback
+    datatype: voltage_input_20v_s16
+    description: Signed probe current monitor (mV); negative indicates rising current draw.
+    default_value: 0
+    min_value: -5000
+    max_value: 5000
+    units: mV
+    # INPUT: Maps to InputA (ADC channel), not a control register
+
+  # Gate the monitoring block so software can disable it for probes lacking feedback.
+  - name: monitor_enable
+    datatype: boolean
+    description: Enable probe monitor threshold evaluation.
+    default_value: true
+    control_register: CR8
+    bit_range: "[0]"
+
+  # True when a negative-going crossing counts as "probe fired"; flip for probes that spike positive.
+  - name: monitor_expect_negative
+    datatype: boolean
+    description: True when a negative-going crossing counts as "probe fired".
+    default_value: true
+    control_register: CR8
+    bit_range: "[1]"
+
+  # Threshold (mV) the monitor must cross within the observation window.
+  - name: monitor_threshold_voltage
+    datatype: voltage_input_20v_s16
+    description: Threshold (mV) the monitor must cross within the observation window.
+    default_value: -200
+    min_value: -5000
+    max_value: 5000
+    units: mV
+    control_register: CR9
+    bit_range: "[15:0]"
+
+  # Delay after trigger before monitoring window opens (ns resolution for precise gating).
+  - name: monitor_window_start
+    datatype: pulse_duration_ns_u32
+    description: Delay after trigger before monitoring window opens.
+    default_value: 0
+    min_value: 0
+    max_value: 2000000000
+    units: ns
+    control_register: CR10
+    bit_range: "[31:0]"
+
+  # Length of monitoring window starting at monitor_window_start (supports long settling tails).
+  - name: monitor_window_duration
+    datatype: pulse_duration_ns_u32
+    description: Length of monitoring window starting at monitor_window_start.
+    default_value: 5000
+    min_value: 100
+    max_value: 2000000000
+    units: ns
+    control_register: CR11
+    bit_range: "[31:0]"

@@ -1,0 +1,206 @@
+{
+  "name": "FORGE-Template",
+  "version": "2.0.0",
+  "description": "Composable monorepo template for embedded instrument development with AI-optimized 3-tier documentation",
+  "type": "template",
+  "repository": "https://github.com/vmars-20/FORGE-Template",
+  "license": "MIT",
+  "discovery": {
+    "entry_point": "llms.txt",
+    "architecture_guide": "CLAUDE.md",
+    "quick_reference": "README.md",
+    "customization_guide": ".claude/commands/customize-monorepo.md"
+  },
+  "documentation": {
+    "tiers": {
+      "tier1": {
+        "name": "Quick Reference",
+        "pattern": "**/llms.txt",
+        "token_budget": "500-1000",
+        "load": "always"
+      },
+      "tier2": {
+        "name": "Complete Guide",
+        "pattern": "**/CLAUDE.md",
+        "token_budget": "3000-5000",
+        "load": "when_designing"
+      },
+      "tier3": {
+        "name": "Implementation Details",
+        "pattern": "**/*.{py,vhd,md}",
+        "token_budget": "10000+",
+        "load": "when_implementing"
+      }
+    }
+  },
+  "submodules": [
+    {
+      "name": "forge-codegen",
+      "path": "tools/forge-codegen",
+      "type": "tool",
+      "required": false,
+      "repository": "https://github.com/YOUR-USERNAME/YOUR-REPO-forge-codegen",
+      "description": "YAML → VHDL code generator with type-safe register serialization",
+      "authority": "23-type system, register packing algorithm, VHDL generation",
+      "documentation": {
+        "llms_txt": "tools/forge-codegen/llms.txt",
+        "claude_md": "tools/forge-codegen/CLAUDE.md",
+        "readme": "tools/forge-codegen/README.md"
+      },
+      "use_cases": [
+        "Generating VHDL from YAML specs",
+        "Type-safe register management",
+        "Automatic register packing"
+      ],
+      "removal_safe": true,
+      "removal_reason": "Remove if using different code generation tool or writing VHDL manually"
+    },
+    {
+      "name": "forge-vhdl",
+      "path": "libs/forge-vhdl",
+      "type": "library",
+      "required": false,
+      "repository": "https://github.com/YOUR-USERNAME/YOUR-REPO-forge-vhdl",
+      "description": "Reusable VHDL components with CocoTB progressive testing",
+      "authority": "VHDL utilities, voltage packages, clock dividers, FSM observer, testing standards",
+      "documentation": {
+        "llms_txt": "libs/forge-vhdl/llms.txt",
+        "claude_md": "libs/forge-vhdl/CLAUDE.md",
+        "readme": "libs/forge-vhdl/README.md"
+      },
+      "use_cases": [
+        "Reusable VHDL components",
+        "Voltage domain utilities",
+        "CocoTB testing infrastructure"
+      ],
+      "removal_safe": true,
+      "removal_reason": "Remove if not using VHDL or using SystemVerilog"
+    },
+    {
+      "name": "moku-models",
+      "path": "libs/moku-models",
+      "type": "library",
+      "required": false,
+      "repository": "https://github.com/YOUR-USERNAME/YOUR-REPO-moku-models",
+      "description": "Pydantic models for Moku platform specifications (Go/Lab/Pro/Delta)",
+      "authority": "Moku platform specs, deployment configs, signal routing validation",
+      "documentation": {
+        "llms_txt": "libs/moku-models/llms.txt",
+        "claude_md": "libs/moku-models/CLAUDE.md",
+        "readme": "libs/moku-models/README.md"
+      },
+      "use_cases": [
+        "Moku platform specifications",
+        "Deployment configuration validation",
+        "Signal routing validation"
+      ],
+      "removal_safe": true,
+      "removal_reason": "Remove if not targeting Moku platform (e.g., using Red Pitaya, PicoScope)",
+      "fork_suggestion": "Fork if you need custom Moku platform definitions or additional platforms"
+    },
+    {
+      "name": "riscure-models",
+      "path": "libs/riscure-models",
+      "type": "library",
+      "required": false,
+      "repository": "https://github.com/YOUR-USERNAME/YOUR-REPO-riscure-models",
+      "description": "Pydantic models for Riscure probe specifications (DS1120A EM-FI probe)",
+      "authority": "Riscure probe electrical specs, voltage safety validation",
+      "documentation": {
+        "llms_txt": "libs/riscure-models/llms.txt",
+        "claude_md": "libs/riscure-models/CLAUDE.md",
+        "readme": "libs/riscure-models/README.md"
+      },
+      "use_cases": [
+        "Riscure probe specifications",
+        "Voltage safety validation",
+        "Platform-to-probe compatibility checking"
+      ],
+      "removal_safe": true,
+      "removal_reason": "Remove if not using Riscure probes (e.g., using laser probes, custom probes)",
+      "fork_suggestion": "Fork if you need to add specifications for different Riscure probes"
+    }
+  ],
+  "agents": [
+    {
+      "name": "deployment-orchestrator",
+      "path": ".claude/agents/deployment-orchestrator",
+      "description": "Hardware deployment workflows",
+      "scope": "monorepo-level"
+    },
+    {
+      "name": "hardware-debug",
+      "path": ".claude/agents/hardware-debug",
+      "description": "FSM debugging and monitoring",
+      "scope": "monorepo-level"
+    }
+  ],
+  "commands": [
+    {
+      "name": "customize-monorepo",
+      "path": ".claude/commands/customize-monorepo.md",
+      "description": "Guide user through customizing this template",
+      "usage": "/customize-monorepo"
+    },
+    {
+      "name": "sync-submodules",
+      "path": ".claude/commands/sync-submodules.md",
+      "description": "Update all git submodules to latest",
+      "usage": "/sync-submodules"
+    }
+  ],
+  "integration_patterns": [
+    {
+      "name": "type_system_platform_validation",
+      "description": "Validate code generation types against platform specs",
+      "submodules": ["forge-codegen", "moku-models"],
+      "example": "CLAUDE.md#pattern-1-type-system--platform-validation"
+    },
+    {
+      "name": "platform_probe_safety",
+      "description": "Ensure safe wiring between platform and probe hardware",
+      "submodules": ["moku-models", "riscure-models"],
+      "example": "CLAUDE.md#pattern-2-platform--probe-safety-validation"
+    },
+    {
+      "name": "codegen_vhdl_components",
+      "description": "Generated code references reusable VHDL components",
+      "submodules": ["forge-codegen", "forge-vhdl"],
+      "example": "CLAUDE.md#pattern-3-code-generation--vhdl-components"
+    }
+  ],
+  "customization_scenarios": [
+    {
+      "name": "different_platform",
+      "description": "Using different hardware platform (not Moku)",
+      "actions": ["remove:moku-models", "keep:forge-vhdl", "add:your-platform-models"],
+      "guide": "CLAUDE.md#scenario-1-different-platform-not-moku"
+    },
+    {
+      "name": "different_codegen",
+      "description": "Replace forge-codegen with custom generator",
+      "actions": ["remove:forge-codegen", "keep:libs/*", "add:your-codegen"],
+      "guide": "CLAUDE.md#scenario-2-different-code-generator"
+    },
+    {
+      "name": "vhdl_only",
+      "description": "Minimal VHDL-only setup (no code generation)",
+      "actions": ["keep:forge-vhdl", "keep:moku-models", "remove:forge-codegen"],
+      "guide": "CLAUDE.md#scenario-3-minimal-vhdl-only-setup"
+    },
+    {
+      "name": "python_only",
+      "description": "Pure Python (no VHDL)",
+      "actions": ["keep:*-models", "remove:forge-codegen", "remove:forge-vhdl"],
+      "guide": "CLAUDE.md#scenario-4-pure-python-no-vhdl"
+    }
+  ],
+  "metadata": {
+    "architecture_version": "2.0.0",
+    "migration_from": "1.0.0 (nested submodules)",
+    "migration_date": "2025-11-04",
+    "template_ready": true,
+    "github_template": true,
+    "last_updated": "2025-11-04"
+  }
+}

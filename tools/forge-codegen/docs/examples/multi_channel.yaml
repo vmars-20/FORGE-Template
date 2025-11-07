@@ -1,0 +1,46 @@
+app_name: multi_channel_probe
+version: 1.0.0
+description: Multi-channel probe controller with type variety
+platform: moku_pro
+
+datatypes:
+  # Voltage outputs (DAC)
+  - name: dac_voltage_ch1
+    datatype: voltage_output_05v_s16
+    description: Channel 1 DAC output
+    default_value: 0
+    units: V
+
+  - name: dac_voltage_ch2
+    datatype: voltage_output_05v_s16
+    description: Channel 2 DAC output
+    default_value: 0
+    units: V
+
+  # Timing parameters
+  - name: pulse_width
+    datatype: pulse_duration_ms_u16
+    description: Pulse width
+    default_value: 100
+    units: ms
+    min_value: 10
+    max_value: 10000
+
+  - name: settling_time
+    datatype: pulse_duration_ns_u8
+    description: ADC settling time in nanoseconds
+    default_value: 10
+    units: ns
+    min_value: 1
+    max_value: 255
+
+  # Channel enables
+  - name: enable_ch1
+    datatype: boolean
+    description: Enable channel 1
+    default_value: false
+
+  - name: enable_ch2
+    datatype: boolean
+    description: Enable channel 2
+    default_value: false

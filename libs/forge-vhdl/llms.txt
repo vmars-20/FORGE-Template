@@ -1,0 +1,157 @@
+# moku-instrument-forge-vhdl
+
+Shared VHDL utilities for Moku custom instrument development with CocoTB progressive testing.
+
+## Quick Reference
+
+**What:** Reusable VHDL components with token-efficient CocoTB tests
+**Use:** Git submodule in forge-based projects
+**Test:** CocoTB + GHDL filter (P1 tests <20 lines, 98% noise reduction)
+
+## Structure
+
+```
+vhdl/
+├── packages/       # Voltage utilities, serialization, common types
+│   ├── forge_voltage_*_pkg          # Direct voltage utilities (3v3, 5v0, 5v_bipolar)
+│   ├── forge_serialization_*_pkg    # Register serialization (types, voltage, time)
+│   ├── forge_common_pkg             # FORGE_READY control scheme
+│   └── forge_lut_pkg                # Look-up table utilities
+├── utilities/      # forge_util_clk_divider (+ tests), threshold trigger
+├── debugging/      # fsm_observer (real-time FSM monitoring)
+└── loader/         # forge_bram_loader (BRAM initialization)
+
+scripts/            # ghdl_output_filter.py (THE secret weapon)
+tests/              # CocoTB progressive testing infrastructure
+docs/               # Testing standards, guides, patterns
+```
+
+## Key Components (With CocoTB Tests)
+
+**forge_util_clk_divider** - Programmable clock divider
+- P1 tests: 3 (reset, divide-by-2, enable)
+- Output: ~20 lines, ~50 tokens
+
+**forge_lut_pkg** - Look-up table utilities
+- P1 tests: 4 (constants, conversions, index, boundary)
+- Output: ~15 lines, ~70 tokens
+
+**forge_voltage_3v3_pkg** - 0-3.3V voltage domain (TTL/digital logic)
+- P1 tests: 4 (to_digital, from_digital, is_valid, clamp)
+- Output: ~9 lines
+
+**forge_voltage_5v0_pkg** - 0-5.0V voltage domain (unipolar supply)
+- P1 tests: 4 (same as above)
+- Output: ~9 lines
+
+**forge_voltage_5v_bipolar_pkg** - ±5.0V voltage domain (Moku DAC/ADC)
+- P1 tests: 4 (same as above)
+- Output: ~9 lines
+
+**Design:** Function-based type safety, Verilog compatible, explicit domain selection
+**Details:** .migration/VOLTAGE_TYPE_SYSTEM_DESIGN.md, .migration/voltage_types_reference.py
+
+**forge_serialization_types_pkg** - Core serialization type utilities (NEW!)
+- Boolean ↔ std_logic conversions
+- Use with: forge_serialization_voltage_pkg, forge_serialization_time_pkg
+
+**forge_serialization_voltage_pkg** - Voltage register serialization (NEW!)
+- Converts voltage values ↔ register bits
+- Supports 23-type system (12 voltage types, various bit widths)
+- Use for: Control register communication
+
+**forge_serialization_time_pkg** - Time register serialization (NEW!)
+- Converts time durations ↔ clock cycles
+- Clock-frequency aware functions
+- Use for: Timing control via registers
+
+**forge_common_pkg** - FORGE_READY control scheme (NEW! from BPD)
+- CR0[31:29] safe initialization handshaking
+- BRAM loader protocol constants
+- combine_forge_ready() function
+- Production-proven architecture pattern
+
+**fsm_observer** - Export FSM state to Moku registers (no tests yet)
+**forge_bram_loader** - BRAM initialization (no tests yet)
+
+## Testing (NEW!)
+
+```bash
+# Run P1 tests (LLM-optimized, <20 lines)
+uv run python tests/run.py forge_util_clk_divider
+
+# Run P2 tests (full validation)
+TEST_LEVEL=P2_INTERMEDIATE uv run python tests/run.py forge_util_clk_divider
+
+# List all tests
+uv run python tests/run.py --list
+```
+
+## Integration Pattern
+
+Used as submodule in `moku-instrument-forge-mono-repo`:
+
+```bash
+git submodule add https://github.com/sealablab/moku-instrument-forge-vhdl.git libs/forge-vhdl
+```
+
+VHDL files compiled with GHDL via CocoTB test infrastructure.
+
+## Development
+
+```bash
+uv sync                          # Install dependencies
+uv run python tests/run.py --all # Run all tests (P1)
+```
+
+## Testing Quick Start
+
+```bash
+# Run P1 tests (default, LLM-optimized, <20 lines output)
+uv run python tests/run.py forge_util_clk_divider
+
+# Run P2 tests (comprehensive validation)
+TEST_LEVEL=P2_INTERMEDIATE uv run python tests/run.py forge_util_clk_divider
+
+# Run with more verbosity
+COCOTB_VERBOSITY=NORMAL uv run python tests/run.py forge_util_clk_divider
+
+# List all available tests
+uv run python tests/run.py --list
+
+# Run all tests (P1)
+uv run python tests/run.py --all
+```
+
+## Documentation Hierarchy
+
+**Three-tier documentation system optimized for token efficiency:**
+
+**Tier 1 (Quick Ref):** This file (llms.txt) - ~500 tokens
+- Component catalog
+- Basic usage examples
+- Pointers to Tier 2
+
+**Tier 2 (Authoritative):** CLAUDE.md - ~3.5k tokens
+- Complete testing standards
+- CocoTB progressive testing guide
+- Critical interface rules (real/boolean type constraints)
+- VHDL coding standards summary
+- Component integration patterns
+- Quick reference appendix
+
+**Tier 3 (Specialized):** Load only when needed
+- `docs/VHDL_CODING_STANDARDS.md` - Complete style guide (rarely loaded)
+- `docs/COCOTB_TROUBLESHOOTING.md` - Problem→Solution debugging
+- `scripts/GHDL_FILTER.md` - Filter implementation details
+
+**Navigation pattern:**
+- Quick question? → Read llms.txt (this file)
+- Design/testing question? → Read CLAUDE.md
+- Specific error/deep dive? → Read Tier 3 docs
+
+---
+
+**Version:** 2.0.0 (aligned with parent monorepo 3-tier pattern)
+**License:** MIT
+**Standalone:** Yes (works outside monorepo)

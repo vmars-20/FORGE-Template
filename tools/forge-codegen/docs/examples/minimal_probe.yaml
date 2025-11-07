@@ -1,0 +1,22 @@
+app_name: minimal_probe
+version: 1.0.0
+description: My first custom instrument
+platform: moku_go
+
+datatypes:
+  - name: output_voltage
+    datatype: voltage_output_05v_s16
+    description: Output voltage setpoint
+    default_value: 0
+    units: V
+
+  - name: enable_output
+    datatype: boolean
+    description: Enable output driver
+    default_value: false
+
+  - name: pulse_width
+    datatype: pulse_duration_ms_u16
+    description: Pulse width in milliseconds
+    default_value: 100
+    units: ms

@@ -1,0 +1,38 @@
+[project]
+name = "moku-instrument-forge-vhdl"
+version = "1.0.0"
+description = "Shared VHDL utilities for Moku custom instrument development"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Sealab Team" }
+]
+
+dependencies = [
+    "cocotb>=1.8.0",
+    "pytest>=7.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest-xdist>=3.0.0",  # Parallel test execution
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tests", "scripts"]
+
+[tool.pytest.ini_options]
+python_files = "test_*.py"
+testpaths = ["tests"]
+norecursedirs = [".venv", "sim_build", "__pycache__", ".git"]
+addopts = "-v"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest-xdist>=3.0.0",
+]

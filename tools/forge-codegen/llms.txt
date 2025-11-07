@@ -1,0 +1,218 @@
+# moku-instrument-forge-codegen
+
+> YAML→VHDL code generator for Moku custom instruments with type-safe register serialization
+
+## What is this?
+
+Automated code generation framework that transforms YAML specifications into production VHDL firmware for Moku FPGA platforms. Includes integrated 23-type system with automatic register packing for 50-75% register space savings.
+
+## Core Components
+
+### 1. basic_serialized_datatypes (Internal)
+
+Type system and register serialization engine (not a separate library).
+
+**23 Types:**
+- **Voltage (12)**: `voltage_output_05v_s16`, `voltage_input_20v_s16`, `voltage_input_25v_s16`
+- **Time (10)**: `pulse_duration_ns_u16`, `pulse_duration_us_u16`, `pulse_duration_ms_u16`
+- **Boolean (1)**: `boolean` (1-bit)
+
+**Key classes:**
+- `BasicAppDataTypes` - Enum of all 23 types
+- `TYPE_REGISTRY` - Type metadata (bit width, range, description)
+- `RegisterMapper` - Automatic register packing algorithm
+- `TypeConverter` - Python ↔ VHDL conversions
+
+### 2. generator
+
+YAML → VHDL code generation engine.
+
+**Main entry:** `forge_codegen.generator.codegen`
+
+**Functions:**
+- `load_yaml_spec()` - Parse and validate YAML
+- `create_register_package()` - Build register interface
+- `prepare_template_context()` - Prepare Jinja2 context
+- `generate_vhdl()` - Generate shim + main VHDL
+
+### 3. models
+
+Pydantic data models for YAML validation.
+
+**Key models:**
+- `DataTypeSpec` - Single register definition
+- `BasicAppsRegPackage` - Complete register interface
+- `BADRegisterMapper` - Pydantic wrapper for RegisterMapper
+
+### 4. templates
+
+Jinja2 VHDL templates.
+
+- `shim.vhd.j2` - Register interface (MCC ↔ custom logic)
+- `main.vhd.j2` - Application logic template
+
+### 5. vhdl
+
+Frozen VHDL type packages (v1.0.0, NEVER regenerate).
+
+- `basic_app_types_pkg.vhd` - Core type definitions
+- `basic_app_voltage_pkg.vhd` - Voltage conversion functions
+- `basic_app_time_pkg.vhd` - Time conversion functions
+
+## Basic Usage
+
+### Generate VHDL from YAML
+
+```bash
+python -m forge_codegen.generator.codegen spec.yaml --output-dir generated/
+```
+
+### Import in Python
+
+```python
+from forge_codegen.basic_serialized_datatypes import (
+    BasicAppDataTypes,
+    TYPE_REGISTRY,
+    RegisterMapper
+)
+from forge_codegen.models.package import BasicAppsRegPackage, DataTypeSpec
+
+# Create register specification
+datatypes = [
+    DataTypeSpec(
+        name="intensity",
+        datatype=BasicAppDataTypes.VOLTAGE_OUTPUT_05V_S16,
+        description="Pulse intensity",
+        default_value=2.5  # volts
+    ),
+    DataTypeSpec(
+        name="duration",
+        datatype=BasicAppDataTypes.PULSE_DURATION_NS_U16,
+        description="Pulse duration",
+        default_value=500  # ns
+    ),
+]
+
+# Create package and auto-pack registers
+package = BasicAppsRegPackage(
+    name="MyInstrument",
+    datatypes=datatypes
+)
+
+# Export to control registers
+control_regs = package.to_control_registers()
+print(f"Packed into {len(control_regs)} registers")
+```
+
+## Common Tasks
+
+### Find Available Types
+
+```python
+from forge_codegen.basic_serialized_datatypes import BasicAppDataTypes, TYPE_REGISTRY
+
+for type_enum in BasicAppDataTypes:
+    metadata = TYPE_REGISTRY[type_enum]
+    print(f"{type_enum.value}: {metadata.bit_width} bits, {metadata.description}")
+```
+
+### Validate YAML Spec
+
+```python
+from forge_codegen.generator.codegen import load_yaml_spec
+
+spec = load_yaml_spec("path/to/spec.yaml")
+print(f"App: {spec['app_name']}")
+print(f"Registers: {len(spec['registers'])}")
+```
+
+### Get Register Mapping Report
+
+```python
+from forge_codegen.basic_serialized_datatypes import RegisterMapper, BasicAppDataTypes
+
+mapper = RegisterMapper()
+items = [
+    ("signal1", BasicAppDataTypes.VOLTAGE_OUTPUT_05V_S16),
+    ("signal2", BasicAppDataTypes.BOOLEAN),
+    ("signal3", BasicAppDataTypes.PULSE_DURATION_MS_U16),
+]
+
+mappings, report = mapper.map_registers(items)
+print(f"Efficiency: {report.efficiency_percent:.1f}%")
+print(f"Registers used: {report.registers_used}/12")
+```
+
+## File Structure
+
+```
+moku-instrument-forge-codegen/
+├── forge_codegen/
+│   ├── basic_serialized_datatypes/  # Type system (internal)
+│   │   ├── types.py                 # BasicAppDataTypes enum
+│   │   ├── metadata.py              # TYPE_REGISTRY
+│   │   ├── mapper.py                # RegisterMapper algorithm
+│   │   ├── converters.py            # Python ↔ VHDL conversions
+│   │   ├── time.py                  # PulseDuration classes
+│   │   └── voltage.py               # Voltage utilities
+│   ├── generator/                   # YAML → VHDL generation
+│   │   ├── codegen.py               # Main generator
+│   │   └── type_utilities.py        # VHDL package generator
+│   ├── models/                      # Pydantic models
+│   │   ├── app_spec.py
+│   │   ├── mapper.py
+│   │   ├── package.py
+│   │   └── register.py
+│   ├── templates/                   # Jinja2 templates
+│   │   ├── main.vhd.j2
+│   │   └── shim.vhd.j2
+│   └── vhdl/                        # Frozen packages
+│       ├── basic_app_types_pkg.vhd
+│       ├── basic_app_voltage_pkg.vhd
+│       └── basic_app_time_pkg.vhd
+├── tests/                           # 69 tests
+├── docs/                            # Detailed documentation
+├── pyproject.toml
+├── README.md
+└── CLAUDE.md
+```
+
+## Integration Notes
+
+**This project is self-contained.** Optional sibling libraries:
+- **moku-models** - Platform specs (Go/Lab/Pro/Delta) for validation
+- **riscure-models** - Probe specs for safety validation
+- **forge-vhdl** - Reusable VHDL components
+
+**Parent project:** [moku-instrument-forge-mono-repo](https://github.com/sealablab/moku-instrument-forge-mono-repo) (monorepo orchestrator)
+
+## Platform Support
+
+| Platform | Clock | ADC Range | DAC Range | Recommended Types |
+|----------|-------|-----------|-----------|-------------------|
+| Moku:Go | 125 MHz | ±25V | ±5V | `voltage_input_25v_s16`, `voltage_output_05v_s16` |
+| Moku:Lab | 500 MHz | ±5V | ±1V | `voltage_input_20v_s16`, `voltage_output_05v_s16` |
+| Moku:Pro | 1.25 GHz | ±20V | ±5V | `voltage_input_20v_s16`, `voltage_output_05v_s16` |
+| Moku:Delta | 5 GHz | ±20V | ±5V | `voltage_input_20v_s16`, `voltage_output_05v_s16` |
+
+## For More Details
+
+**Deep context:** See [CLAUDE.md](CLAUDE.md) for:
+- Architecture and design rationale
+- Adding new types to the type system
+- VHDL generation pipeline details
+- Testing and validation workflows
+- Integration patterns with moku-models/riscure-models
+
+**Detailed guides:** See [docs/](docs/) for:
+- Getting started tutorial
+- Troubleshooting guide
+- YAML schema reference
+- Python API documentation
+
+---
+
+**Version:** 1.0.0
+**Last Updated:** 2025-11-04
+**License:** MIT
+**Repository:** https://github.com/sealablab/moku-instrument-forge-codegen

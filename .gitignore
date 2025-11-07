@@ -1,0 +1,171 @@
+# ============================================================================
+# Moku Instrument Forge - Template .gitignore
+# ============================================================================
+# Comprehensive patterns for Moku FPGA development with Python tooling
+# Organized by category for clarity and maintainability
+
+# ============================================================================
+# Python
+# ============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.xml
+
+# ============================================================================
+# VHDL / FPGA Development
+# ============================================================================
+
+# CocoTB / GHDL simulation artifacts
+sim_build/
+tests/sim_build/
+*.vcd
+*.ghw
+*.cf
+work-obj*.cf
+
+# GHDL compilation
+*_tb
+*_tb_wrapper
+*_wrapper
+*.o
+*.exe
+*.a
+
+# Waveform files (can be large)
+*.mov
+
+# CloudCompile / Moku build artifacts
+**/cloudcompile_package/
+bitstreams/*.tar.gz
+
+# Test executables
+tests/clk_divider_core
+tests/stoplight_core
+tests/e~*.o
+
+# ============================================================================
+# IDE / Editor
+# ============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Obsidian notes (personal workspace)
+.obsidian/
+
+# ============================================================================
+# OS Generated
+# ============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ============================================================================
+# Build Artifacts
+# ============================================================================
+*.tar
+*.zip
+*.log
+
+# ============================================================================
+# Claude Code
+# ============================================================================
+# Local settings (user-specific, don't commit)
+.claude/settings.local.json
+
+# Large log directories (personal debugging)
+.Claude_Logs/
+
+# ============================================================================
+# Temporary / Scratch Files
+# ============================================================================
+*.tmp
+*.bak
+*.txt.md
+typescript
+t.txt
+
+# Date-stamped temp files
+2025-*.txt
+*-TODO.txt
+*-todo.txt
+*-todo.txt.md
+
+# ============================================================================
+# External Dependencies (Use Submodules Instead)
+# ============================================================================
+# These should be git submodules, not direct copies
+EXTERNAL_volo_vhdl/
+volo_vhdl_external_/
+moku-dev-examples/
+mcc-examples/
+
+# ============================================================================
+# Vendor Documentation (Large Files)
+# ============================================================================
+# Keep large PDFs out of git, reference externally or use Git LFS
+vendor_docs/
+
+# ============================================================================
+# Personal Development Artifacts
+# ============================================================================
+# Temporary development directories
+DCSequencer/
+prompts/
+static/
+
+# Node.js (if any JavaScript tooling exists)
+node_modules/
+package.json
+package-lock.json
+
+# ============================================================================
+# Project-Specific Exclusions
+# ============================================================================
+# Add your project-specific ignores below this line
+
+# Example: Temporary test files
+# test_counter_16bit.yaml
+# MCC_UPLOAD_LIST.txt
+
+# uv lock file (some projects prefer to commit this, some don't)
+# Uncomment if you want to ignore it:
+# uv.lock

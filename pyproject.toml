@@ -1,0 +1,82 @@
+# Workspace-mode pyproject.toml for monorepo container
+# This is a PURE workspace - no package is built at the root level
+
+[project]
+name = "moku-instrument-forge-mono-repo"
+version = "2.0.0"
+description = "Composable monorepo template for embedded instrument development"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Sealab Team" }
+]
+
+# Workspace-level shared dependencies
+# These are available to all workspace members
+dependencies = [
+    "cocotb>=1.8.0",      # VHDL testing (forge-vhdl)
+    "pydantic>=2.0.0",    # Models (moku-models, riscure-models, forge-codegen)
+    "pytest>=7.0.0",      # Testing framework
+    "pyyaml>=6.0.0",      # YAML parsing (forge-codegen)
+    "jinja2>=3.1.0",      # Template rendering (forge-codegen)
+    "click>=8.1.0",       # CLI (forge-codegen)
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest-xdist>=3.0.0",  # Parallel test execution
+    "ruff>=0.1.0",          # Python linting
+    "black>=24.0.0",        # Code formatting
+]
+
+# ============================================================================
+# UV WORKSPACE CONFIGURATION
+# ============================================================================
+
+[tool.uv.workspace]
+# Declare submodules as workspace members
+# uv will manage these as a unified dependency graph
+members = [
+    "libs/forge-vhdl",
+    "libs/moku-models",
+    "libs/riscure-models",
+    "tools/forge-codegen",
+]
+
+# ============================================================================
+# NO BUILD SYSTEM - This is a pure workspace container
+# Submodules have their own [build-system] sections
+# ============================================================================
+
+# ============================================================================
+# TESTING CONFIGURATION
+# ============================================================================
+
+[tool.pytest.ini_options]
+python_files = "test_*.py"
+# Test discovery across all workspace members
+testpaths = [
+    "libs/forge-vhdl/tests",
+    "libs/moku-models/tests",
+    "libs/riscure-models/tests",
+    "tools/forge-codegen/tests",
+]
+norecursedirs = [".venv", "sim_build", "__pycache__", ".git"]
+addopts = "-v --tb=short"
+
+# ============================================================================
+# CODE QUALITY TOOLS
+# ============================================================================
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = []
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]

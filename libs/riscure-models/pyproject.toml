@@ -1,0 +1,40 @@
+[project]
+name = "riscure-models"
+version = "0.1.0"
+description = "Pydantic models for Riscure FI/SCA probe specifications and Moku integration"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Sealab Team" }
+]
+license = { text = "MIT" }
+
+dependencies = [
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=24.0.0",
+    "ruff>=0.1.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatchling.build.targets.wheel]
+packages = ["riscure_models"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

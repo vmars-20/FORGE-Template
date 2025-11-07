@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.pytest_cache/
+
+# VHDL simulation
+sim_build/
+work-obj08.cf
+*.vcd
+*.ghw
+*.cf
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Migration docs (not tracked in submodule)
+.migration/

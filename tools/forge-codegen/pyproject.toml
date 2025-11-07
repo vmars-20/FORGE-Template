@@ -1,0 +1,55 @@
+[project]
+name = "forge-codegen"
+version = "1.0.0"
+description = "YAML→VHDL code generator for Moku custom instruments with type-safe register serialization"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0",
+    "jinja2>=3.1",
+    "pyyaml>=6.0",
+    "click>=8.1",
+]
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Sealab Team"}
+]
+keywords = ["moku", "vhdl", "fpga", "code-generation", "emfi"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/sealablab/moku-instrument-forge-codegen"
+Documentation = "https://github.com/sealablab/moku-instrument-forge-codegen/blob/main/docs/README.md"
+Repository = "https://github.com/sealablab/moku-instrument-forge-codegen"
+Issues = "https://github.com/sealablab/moku-instrument-forge-codegen/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.black]
+line-length = 120
+target-version = ["py310", "py311", "py312"]
